@@ -9,7 +9,7 @@ import conversationsRouter from "./routes/conversations.js";
 import appointmentsRouter from "./routes/appointments.js";
 import webhooksRouter from "./routes/webhooks.js";
 import patientsRouter from "./routes/patients.js";
-import paymentsRouter from "./routes/payments.js";
+import paymentsRouter from "./routes/Payments.js";
 import { requireApiKey } from "./middleware/auth.js";
 import casesRouter from "./routes/cases.js";
 
