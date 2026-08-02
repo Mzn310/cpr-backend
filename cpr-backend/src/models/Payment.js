@@ -1,12 +1,12 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema({
-  stripeSessionId: { type: String, required: true, unique: true },
+  stripeSessionId: { type: String, required: true, unique: true }, // holds the Tap charge id ("chg_xxx")
   chatId: { type: String, required: true },
   amountTotal: Number,
   currency: String,
-  status: { type: String, default: 'pending' },
-  createdAt: { type: Date, default: Date.now }
+  status: { type: String, default: "pending" },
+  createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('Payment', paymentSchema);
+export default mongoose.model("Payment", paymentSchema);

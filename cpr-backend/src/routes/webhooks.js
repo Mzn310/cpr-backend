@@ -1,49 +1,76 @@
-import { Router } from 'express';
-import Stripe from 'stripe';
-import Payment from '../models/Payment.js';
-import { createBooking } from './bookings.js';
+import { Router } from "express";
+import crypto from "crypto";
+import Payment from "../models/Payment.js";
+import { createBooking } from "./bookings.js";
 
 const router = Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Point Stripe's webhook directly at this endpoint (not at n8n) so the
-// signature can be verified.
-router.post('/stripe', async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    return res.status(400).send(`Webhook signature verification failed: ${err.message}`);
+// POST /api/webhooks/tap
+// Point this at Tap's dashboard/charge "post.url" (see routes/payments.js).
+// Verification formula is copied exactly from Tap's own docs
+// (developers.tap.company/docs/webhook) - do NOT reorder these fields, the
+// hash will silently fail to match if the concatenation order changes.
+function verifyTapHashstring(body, secretKey) {
+  const toBeHashed =
+    "x_id" +
+    body.id +
+    "x_amount" +
+    body.amount +
+    "x_currency" +
+    body.currency +
+    "x_gateway_reference" +
+    body.reference?.gateway +
+    "x_payment_reference" +
+    body.reference?.payment +
+    "x_status" +
+    body.status +
+    "x_created" +
+    body.transaction?.created;
+  return crypto
+    .createHmac("sha256", secretKey)
+    .update(toBeHashed)
+    .digest("hex");
+}
+
+router.post("/tap", async (req, res) => {
+  const body = req.body;
+  const postedHash = req.header("hashstring") || body.hashstring;
+  const expectedHash = verifyTapHashstring(body, process.env.TAP_SECRET_KEY);
+
+  if (!postedHash || postedHash !== expectedHash) {
+    return res.status(401).json({ error: "invalid_hashstring" });
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    if (session.payment_status !== 'paid') return res.json({ ok: true, ignored: true });
+  if (body.status !== "CAPTURED") {
+    return res.json({ ok: true, ignored: true, status: body.status });
+  }
 
-    // Idempotency: Stripe may deliver the same event more than once.
-    const existing = await Payment.findOne({ stripeSessionId: session.id });
-    if (existing) return res.json({ ok: true, duplicate: true });
+  // Idempotency: Tap may deliver the same event more than once.
+  const existing = await Payment.findOne({ stripeSessionId: body.id });
+  if (existing) return res.json({ ok: true, duplicate: true });
 
-    await Payment.create({
-      stripeSessionId: session.id,
-      chatId: session.metadata.chat_id,
-      amountTotal: session.amount_total,
-      currency: session.currency,
-      status: 'paid'
+  await Payment.create({
+    stripeSessionId: body.id, // reused field name - holds the Tap charge id
+    chatId: body.metadata?.chat_id,
+    amountTotal: body.amount,
+    currency: body.currency,
+    status: "paid",
+  });
+
+  try {
+    await createBooking({
+      phone: body.metadata?.patient_phone,
+      channel: body.metadata?.channel,
+      chatId: body.metadata?.chat_id,
+      slotId: body.metadata?.slot_id,
+      paymentRef: body.id,
     });
-
-    try {
-      await createBooking({
-        phone: session.metadata.patient_phone,
-        channel: session.metadata.channel,
-        chatId: session.metadata.chat_id,
-        slotId: session.metadata.slot_id,
-        paymentRef: session.id
-      });
-    } catch (e) {
-      console.error('Booking creation failed after payment:', e.message, session.id);
-    }
+  } catch (e) {
+    console.error(
+      "Booking creation failed after Tap payment:",
+      e.message,
+      body.id,
+    );
   }
 
   res.json({ received: true });
