@@ -14,7 +14,7 @@ router.get("/lookup", async (req, res) => {
   const { chat_id } = req.query;
   if (!chat_id) return res.status(400).json({ error: "chat_id_required" });
   const patient = await Patient.findOne({ chatId: chat_id });
-  if (!patient) return res.status(404).json({ found: false });
+  if (!patient) return res.status(200).json({ found: false });
   res.json({ found: true, patient });
 });
 
