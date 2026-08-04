@@ -46,14 +46,38 @@ router.post("/:chatId/resume", async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/conversations/:chatId/check-message  { message_id }
+// Called by n8n right after WhatsApp Trigger, before any other processing.
+// Returns { isDuplicate: true } if this message_id was already processed
+// for this chatId, so the workflow can stop and avoid double-execution.
 router.post("/:chatId/check-message", async (req, res) => {
   const { message_id } = req.body;
-  const conv = await Conversation.findOneAndUpdate(
-    { chatId: req.params.chatId, processedMessageIds: { $ne: message_id } },
-    { $push: { processedMessageIds: { $each: [message_id], $slice: -50 } } },
-    { new: true },
-  );
-  res.json({ isDuplicate: !conv });
+  if (!message_id) {
+    return res.status(400).json({ error: "message_id_required" });
+  }
+
+  try {
+    // upsert: true -> if this is a brand-new conversation (no document yet),
+    // create it and record the message id. Without upsert, findOneAndUpdate
+    // returns null for a conversation that doesn't exist yet, which was
+    // wrongly being read as "isDuplicate: true" and silently dropping every
+    // first message of every new conversation.
+    const conv = await Conversation.findOneAndUpdate(
+      { chatId: req.params.chatId, processedMessageIds: { $ne: message_id } },
+      { $push: { processedMessageIds: { $each: [message_id], $slice: -50 } } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+    res.json({ isDuplicate: !conv });
+  } catch (e) {
+    // Race condition: two near-simultaneous first messages for the same
+    // chatId both try to upsert-create the document. The unique index on
+    // chatId throws E11000 for the loser — that message genuinely is a
+    // duplicate delivery, so treat it as one instead of erroring out.
+    if (e.code === 11000) {
+      return res.json({ isDuplicate: true });
+    }
+    res.status(500).json({ error: e.message });
+  }
 });
 
 export default router;
