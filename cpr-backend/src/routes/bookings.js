@@ -67,6 +67,12 @@ router.get("/", async (req, res) => {
     chatId: b.patientId?.chatId,
     date: b.slotId?.date,
     time: b.slotId?.time,
+    dayOfWeek: b.slotId?.date
+      ? new Date(b.slotId.date + "T00:00:00Z").toLocaleDateString("en-US", {
+          weekday: "long",
+          timeZone: "UTC",
+        })
+      : null,
     doctor: b.slotId?.doctor,
   }));
   res.json(shaped);
