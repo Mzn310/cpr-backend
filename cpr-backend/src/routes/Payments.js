@@ -9,6 +9,44 @@ const TAP_API_BASE = "https://api.tap.company/v2";
 const DEPOSIT_CURRENCY = process.env.DEPOSIT_CURRENCY || "SAR";
 const DEPOSIT_AMOUNT = Number(process.env.DEPOSIT_AMOUNT || 50);
 
+// Longest-prefix-first list of country calling codes we expect patients
+// to use (Gulf/MENA first since that's the clinic's patient base).
+// Add more if you get patients from other regions.
+const COUNTRY_CODES = [
+  "971",
+  "966",
+  "965",
+  "973",
+  "974",
+  "968",
+  "962",
+  "963",
+  "964",
+  "961",
+  "970",
+  "249",
+  "218",
+  "967",
+  "216",
+  "212",
+  "213",
+  "20",
+  "1",
+  "44",
+].sort((a, b) => b.length - a.length);
+
+function splitPhone(raw) {
+  const digits = String(raw || "").replace(/[^\d]/g, "");
+  for (const code of COUNTRY_CODES) {
+    if (digits.startsWith(code)) {
+      return { country_code: code, number: digits.slice(code.length) };
+    }
+  }
+  // Fallback: no known code matched — send everything as the number.
+  // Tap will likely reject this, but it won't crash the request.
+  return { country_code: "", number: digits };
+}
+
 // POST /api/payments/checkout-session
 router.post("/checkout-session", async (req, res) => {
   const { slot_id, patient_phone, patient_name, chat_id, channel } = req.body;
@@ -25,6 +63,7 @@ router.post("/checkout-session", async (req, res) => {
   const nameParts = (patient_name || "Patient").trim().split(/\s+/);
   const first_name = nameParts[0];
   const last_name = nameParts.slice(1).join(" ") || first_name;
+  const { country_code, number } = splitPhone(patient_phone);
 
   try {
     const tapRes = await fetch(`${TAP_API_BASE}/charges`, {
@@ -42,7 +81,7 @@ router.post("/checkout-session", async (req, res) => {
         customer: {
           first_name,
           last_name,
-          phone: { number: patient_phone || "" },
+          phone: { country_code, number },
         },
         source: { id: "src_all" },
         redirect: {
