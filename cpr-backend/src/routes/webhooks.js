@@ -41,7 +41,6 @@ router.post("/tap", async (req, res) => {
     return res.json({ ok: true, ignored: true, status: body.status });
   }
 
-  // Idempotency: Tap may deliver the same event more than once.
   const existing = await Payment.findOne({ stripeSessionId: body.id });
   if (existing) return res.json({ ok: true, duplicate: true });
 

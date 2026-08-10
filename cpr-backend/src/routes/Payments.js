@@ -3,13 +3,10 @@ import Slot from "../models/Slot.js";
 
 const router = Router();
 
-const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY; // sk_live_xxx / sk_test_xxx from Tap dashboard
+const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY;
 const TAP_API_BASE = "https://api.tap.company/v2";
 
-// Tap operates across Saudi, Qatar, Kuwait, Bahrain, UAE, Oman with one
-
 const DEPOSIT_CURRENCY = process.env.DEPOSIT_CURRENCY || "SAR";
-// Tap's API always expects amount as a plain decimal number (e.g. 50 or
 const DEPOSIT_AMOUNT = Number(process.env.DEPOSIT_AMOUNT || 50);
 
 // POST /api/payments/checkout-session
@@ -39,16 +36,12 @@ router.post("/checkout-session", async (req, res) => {
         save_card: false,
         description: `Appointment deposit - ${slot.date} ${slot.time}`,
         customer: { phone: { number: patient_phone || "" } },
-        // src_all lets Tap show every locally relevant method (mada, cards,
-        // Apple Pay, KNET, Benefit, etc.) based on the customer's country.
         source: { id: "src_all" },
         redirect: {
           url:
             process.env.PAYMENT_REDIRECT_URL ||
             "https://example.com/payment-complete",
         },
-        // Tap calls this URL server-to-server once the payment settles -
-        // point it at the /api/webhooks/tap route.
         post: { url: process.env.TAP_WEBHOOK_URL },
         reference: {
           transaction: `${chat_id}-${Date.now()}`,
@@ -76,8 +69,6 @@ router.post("/checkout-session", async (req, res) => {
       charge_id: charge.id,
     });
   } catch (e) {
-    // Release the hold if we failed to create the charge, otherwise the
-    // slot stays stuck as Pending until the 65-minute cleanup runs.
     await Slot.findByIdAndUpdate(slot._id, {
       $set: { status: "Available", heldAt: null },
     });
