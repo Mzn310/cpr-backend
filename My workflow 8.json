@@ -1,0 +1,1638 @@
+{
+  "name": "My workflow 8",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "5882436e-bede-4c94-abc4-6cbe7b4047e0",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        960
+      ],
+      "webhookId": "8c6f666e-fe65-4bb6-bbef-99d6f8d6ae38",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "msEzgBz08yYq7d2M",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!$json.messages || !$json.messages.length) {\n  return [];\n}\n\nconst msgId = $json.messages[0].id;\nconst waId = $json.contacts[0].wa_id;\nreturn [{ json: { ...$json, msgId, waId } }];"
+      },
+      "id": "789a5649-2d43-4358-8e15-d77ca768f797",
+      "name": "Extract Message ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://cpr-backend-je41.vercel.app/api/conversations/{{ $json.waId }}/check-message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message_id",
+              "value": "={{ $json.msgId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "832e2ace-1e62-4918-867d-10dde53e02e9",
+      "name": "Check Duplicate Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1808,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "f3c4d5e6-a7b8-4901-c3d4-e5f6a7b8c9d0",
+              "leftValue": "={{ $json.isDuplicate }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ee62c3af-c045-4244-9ec7-08deef9a440f",
+      "name": "Is Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        1264
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f2e673cd-ccf1-4d09-912a-ecdcf40df607",
+      "name": "Duplicate - Ignore",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1584,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message ID').item.json.messages[0].type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              }
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message ID').item.json.messages[0].type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              }
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message ID').item.json.messages[0].type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "7366ecb5-52d4-46ed-8819-f5f9d62734f3",
+      "name": "Message Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -1616,
+        784
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "935a9f6e-4b89-43e8-813d-589b70852f74",
+      "name": "Ignore (unsupported type)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1584,
+        1392
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v20.0/{{ $('Extract Message ID').item.json.messages[0].audio.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAglzGeQMt8BSGDQBX58fWdpL6ZCPL1bfMdLLC0c44qSWOc9zIhV3TN1EkquthZA8enmwKqviIGIBXayL4pSZBSRuIOwPlAkkG4zDQ9n9yX6Vp3mJArqsCdI42ppghMwWMZArMHjn41ZABnQsi9ryZCUGuNJerfxTXsAXZAlZBkhpakyNLGgbtlBmAduF2xpjh97XqQm1ZCkJhE000zKaGijr6REj9VNMx5if6nam3Y8Dt80vqghl8OdPu4TLPaJWXA3SYQzxU7d76vCcMfvJv1JU8wZDZD"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "26f0ce22-f73a-427c-90a4-8f0ad553b757",
+      "name": "Get Audio Media URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1344,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAglzGeQMt8BSGDQBX58fWdpL6ZCPL1bfMdLLC0c44qSWOc9zIhV3TN1EkquthZA8enmwKqviIGIBXayL4pSZBSRuIOwPlAkkG4zDQ9n9yX6Vp3mJArqsCdI42ppghMwWMZArMHjn41ZABnQsi9ryZCUGuNJerfxTXsAXZAlZBkhpakyNLGgbtlBmAduF2xpjh97XqQm1ZCkJhE000zKaGijr6REj9VNMx5if6nam3Y8Dt80vqghl8OdPu4TLPaJWXA3SYQzxU7d76vCcMfvJv1JU8wZDZD"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "1b146699-1cb6-42ee-a148-64f8f5131534",
+      "name": "Download Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "whisper-large-v3"
+            },
+            {
+              "name": "response_format",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6cb742ba-a798-42d3-be4d-74e796c8e584",
+      "name": "Transcribe Audio (Groq Whisper)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -896,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  wa_id: $('WhatsApp Trigger').first().json.contacts[0].wa_id,\n  name: $('WhatsApp Trigger').first().json.contacts[0].profile.name,\n  phone_number_id: $('WhatsApp Trigger').first().json.metadata.phone_number_id,\n  text: $json.text,\n  type: 'audio'\n} }];"
+      },
+      "id": "70968776-1618-4830-8885-a4c5ae40db93",
+      "name": "Normalize Audio Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  wa_id: $('Extract Message ID').item.json.contacts[0].wa_id,\n  name: $('Extract Message ID').item.json.contacts[0].profile.name,\n  phone_number_id: $('Extract Message ID').item.json.metadata.phone_number_id,\n  text: $('Extract Message ID').item.json.messages[0].text.body,\n  type: 'text'\n} }];"
+      },
+      "id": "ae69533b-40cc-4ab4-b510-c9d291d5398f",
+      "name": "Normalize Text Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v20.0/{{ $('Extract Message ID').item.json.messages[0].image.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAPZAcVljOHQBSCceZBvmPapeVBkZA9nRgwOtYQolTTcQ6t88p1cJkZB3wlZAwRqnh5vR9NFVLg4avhjoUfGHVrs5yfbM7DujhgZBsNCGo2LMHt3TV7e1Ioim2G3M6yv3JUcfSZBG1JSZAs81UfdPKw2bt5vmQgFyMFZCz4t5GaPnvsRoif4av68inuwgcZA3BEAlBZBYmepAFEnZAAfCHOxEgkxecaV9SvNkyS3umZCdrLgiJni4ZAoZAhrPSEZAh88BSeW6e8M96qaGZAeLDEIrwjAPDZCYw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d05e90e-6fd3-43ea-9eb5-dc4719295c06",
+      "name": "Get Image Media URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1344,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://cpr-backend-je41.vercel.app/api/conversations/{{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "state",
+              "value": "awaiting_case_description"
+            },
+            {
+              "name": "pendingData",
+              "value": "={{ JSON.stringify({ media_id: $('Extract Message ID').item.json.messages[0].image.id }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "badfe00b-c4dc-42d3-8350-3453b57dcd8f",
+      "name": "Mark Awaiting Case Description",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').first().json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "استلمنا صورتك 🙏 من فضلك اكتب وصف نصي مختصر للحالة حتى نحوّلها للطبيب مباشرة.",
+        "additionalFields": {}
+      },
+      "id": "7fa1f547-5436-4c03-a326-51bf7e0cd2fe",
+      "name": "Ask For Case Description",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -896,
+        1248
+      ],
+      "webhookId": "img-ask-desc-webhook",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "qUdSJt3E7sLVd7ci",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://cpr-backend-je41.vercel.app/api/conversations/{{ $json.wa_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3405a551-a52f-4288-b719-ce419bf9799b",
+      "name": "Get Conversation State",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "awaiting_case_description",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              }
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "paused_human",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "809e35a4-51bb-464c-8359-5a1f826fc93d",
+      "name": "Conversation State Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -896,
+        960
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7fc8a40f-d84c-4ff6-a322-daddd43a7837",
+      "name": "Stay Silent (human is handling)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const pending = JSON.parse($json.pendingData || '{}');\nreturn [{ json: {\n  media_id: pending.media_id,\n  description: $('Code in JavaScript').item.json.text,\n  wa_id: $('Code in JavaScript').item.json.wa_id,\n  phone_number_id: $('Code in JavaScript').item.json.phone_number_id,\n  name: $('Code in JavaScript').item.json.name\n} }];"
+      },
+      "id": "13a29225-771b-4b2e-adf9-309991221c35",
+      "name": "Parse Pending Case",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v20.0/1149971721541806/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAPZAcVljOHQBSCceZBvmPapeVBkZA9nRgwOtYQolTTcQ6t88p1cJkZB3wlZAwRqnh5vR9NFVLg4avhjoUfGHVrs5yfbM7DujhgZBsNCGo2LMHt3TV7e1Ioim2G3M6yv3JUcfSZBG1JSZAs81UfdPKw2bt5vmQgFyMFZCz4t5GaPnvsRoif4av68inuwgcZA3BEAlBZBYmepAFEnZAAfCHOxEgkxecaV9SvNkyS3umZCdrLgiJni4ZAoZAhrPSEZAh88BSeW6e8M96qaGZAeLDEIrwjAPDZCYw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: \"15551826689\", type: \"image\", image: { id: $json.media_id } }) }}",
+        "options": {}
+      },
+      "id": "31ee9e15-fb25-4278-8480-1608ad5139e9",
+      "name": "Forward Image To Doctor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -464,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').first().json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "15551826689",
+        "textBody": "=وصف الحالة من المريض ({{ $('Parse Pending Case').item.json.name }} - {{ $('Parse Pending Case').item.json.wa_id }}):\n{{ $('Parse Pending Case').item.json.description }}",
+        "additionalFields": {}
+      },
+      "id": "e9cbc38d-5832-4768-b394-a26d56b40ae5",
+      "name": "Forward Description To Doctor",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        1248
+      ],
+      "webhookId": "forward-desc-webhook",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "qUdSJt3E7sLVd7ci",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://cpr-backend-je41.vercel.app/api/cases",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('Parse Pending Case').item.json.wa_id }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('Parse Pending Case').item.json.wa_id }}"
+            },
+            {
+              "name": "image_id",
+              "value": "={{ $('Parse Pending Case').item.json.media_id }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $('Parse Pending Case').item.json.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95aa2d9f-b98c-48f8-a1f6-05534891f48a",
+      "name": "Log Case (backend record)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://cpr-backend-je41.vercel.app/api/conversations/{{ $('Parse Pending Case').item.json.wa_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "state",
+              "value": "idle"
+            },
+            {
+              "name": "pendingData"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d83b9f7-7220-46b4-b8c4-7d2379351773",
+      "name": "Reset Conversation State",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').first().json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('Parse Pending Case').item.json.wa_id }}",
+        "textBody": "تم إرسال حالتك للطبيب المختص، سيتواصل معك قريباً 🙏",
+        "additionalFields": {}
+      },
+      "id": "95a479c6-5e1b-45ac-95b2-00f4a3cbce70",
+      "name": "Confirm Case Sent To Patient",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        1248
+      ],
+      "webhookId": "confirm-case-webhook",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "qUdSJt3E7sLVd7ci",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('WhatsApp Trigger').first().json.messages[0].type === 'audio' ? $('Normalize Audio Input').first().json.text : $('WhatsApp Trigger').first().json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=# Doctor Clinic WhatsApp Appointment Booking AI Assistant (C.P.R)\n\nYou are the AI Assistant for a cosmetic/dental clinic, part of the Cognitive Patient Routing (C.P.R) system.\nBe polite, concise, and WhatsApp-friendly. Guide users step by step using numbered choices.\nReply naturally in the patient's own dialect (including Gulf/Khaleeji Arabic), matching their tone, but keep messages short.\nNever invent data. Always use the available tools to read/write real data from the CPR backend.\nThe current patient's chat_id is {{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}.\n\n## OUTPUT FORMAT — CRITICAL\nOnly output the final message meant for the patient. Never include your reasoning, planning, tool-call analysis, or phrases like \"I should...\" or \"Let's re-evaluate...\" in your response. If you need to think through a problem, do it silently before producing the single clean reply.\n\n## MAIN MENU\nOn a new conversation, send this menu, translated naturally into the patient's own language/dialect (default to Arabic if the patient wrote in Arabic, as most patients will):\n\nمرحباً! أهلاً بك في العيادة 👋\nالرجاء اختيار خيار:\n1. حجز جديد\n2. حجوزاتي القادمة\n3. إعادة جدولة الحجز\n4. إلغاء الحجز\n\nIf the patient's first message was in English, send the English version instead. Match the patient's language for this menu and for every message that follows — never default to English when the patient is writing in Arabic.\n\n## PAYMENT METHODS\n- Online (deposit via payment link): call \"Create Payment Link\" directly with the chosen slot_id — do NOT call \"Hold Slot\" first, \"Create Payment Link\" already holds the slot itself internally. Never mark the appointment Confirmed yourself — the backend confirms it automatically once the patient actually pays. Tell the patient the link is valid for 60 minutes.\n- Cash (pay at clinic): call \"Hold Slot\" with ONLY the slot_id of the chosen slot (no other parameters — the tool does not accept date or time), then immediately call \"Book Appointment (Cash)\" with that same slot_id.\npayment_method sent to any tool MUST be exactly the literal word \"Online\" or the literal word \"Cash\". Never translate or add extra words.\n\n## HOLD SLOT FAILURE HANDLING\nIf \"Hold Slot\" returns an error (slot_not_available / 409):\n1. Silently call \"Get My Bookings\" first — if a Confirmed booking already exists for this patient at that date/time, tell them their appointment is already confirmed and stop. Do not re-list slots or re-ask payment method.\n2. Otherwise, call \"List Available Slots\" again for the same date and show the patient the current list, saying the previous time was just taken. Stay in the booking flow — do NOT go back to the main menu.\n\n## DATES\nToday is {{ $now.setZone(\"Africa/Tunis\").toFormat(\"cccc, dd LLLL yyyy\") }} (ISO: {{ $now.setZone(\"Africa/Tunis\").toFormat(\"yyyy-MM-dd\") }}).\n## AVAILABLE TIMES — CRITICAL\nNEVER invent, guess, or generate a list of appointment times yourself. The only valid times are whatever \"List Available Slots\" returns for that exact date — nothing else exists.\nYou MUST call \"List Available Slots\" every single time before showing any time options, even if you think you already know them.\nIf the tool returns no slots for that date, tell the patient no times are available that day and ask them to pick a different date. Do not fall back to a generic schedule.\nBookable dates for the next 7 days (user picks by number; store the ISO value in brackets):\n1. {{ $now.setZone(\"Africa/Tunis\").toFormat(\"cccc, dd LLLL yyyy\") }} (today) [{{ $now.setZone(\"Africa/Tunis\").toFormat(\"yyyy-MM-dd\") }}]\n2. {{ $now.setZone(\"Africa/Tunis\").plus({ days: 1 }).toFormat(\"cccc, dd LLLL yyyy\") }} [{{ $now.setZone(\"Africa/Tunis\").plus({ days: 1 }).toFormat(\"yyyy-MM-dd\") }}]\n3. {{ $now.setZone(\"Africa/Tunis\").plus({ days: 2 }).toFormat(\"cccc, dd LLLL yyyy\") }} [{{ $now.setZone(\"Africa/Tunis\").plus({ days: 2 }).toFormat(\"yyyy-MM-dd\") }}]\n4. {{ $now.setZone(\"Africa/Tunis\").plus({ days: 3 }).toFormat(\"cccc, dd LLLL yyyy\") }} [{{ $now.setZone(\"Africa/Tunis\").plus({ days: 3 }).toFormat(\"yyyy-MM-dd\") }}]\n5. {{ $now.setZone(\"Africa/Tunis\").plus({ days: 4 }).toFormat(\"cccc, dd LLLL yyyy\") }} [{{ $now.setZone(\"Africa/Tunis\").plus({ days: 4 }).toFormat(\"yyyy-MM-dd\") }}]\n6. {{ $now.setZone(\"Africa/Tunis\").plus({ days: 5 }).toFormat(\"cccc, dd LLLL yyyy\") }} [{{ $now.setZone(\"Africa/Tunis\").plus({ days: 5 }).toFormat(\"yyyy-MM-dd\") }}]\n7. {{ $now.setZone(\"Africa/Tunis\").plus({ days: 6 }).toFormat(\"cccc, dd LLLL yyyy\") }} [{{ $now.setZone(\"Africa/Tunis\").plus({ days: 6 }).toFormat(\"yyyy-MM-dd\") }}]\nNever calculate dates yourself, never output tool-call syntax as visible text.\nNever ask for date and time in the same message: ask for the date, call \"List Available Slots\" for that date, then ask for the time from what it returns.\n\n## NEW BOOKING FLOW\n(Patient is already registered by this point — see PATIENT REGISTRATION above.)\n1. Ask for the date, call \"List Available Slots\", ask for the time.\n2. Ask for payment method (Online or Cash).\n3. Confirm all details before booking.\n4. If Online: call \"Create Payment Link\" directly with the chosen slot_id (do not call \"Hold Slot\" first).\n   If Cash: call \"Hold Slot\" with ONLY the slot_id (no date/time), then call \"Book Appointment (Cash)\" with that slot_id.\n\n## MY BOOKINGS / RESCHEDULE / CANCEL\nAlways call \"Get My Bookings\" first before showing anything — never answer from memory, this data changes.\nOnly show status Confirmed rows, never the same appointment twice.\nReschedule: ask for new date, call \"List Available Slots\", ask for new time, then call \"Reschedule Booking\" with the existing booking id and new slot id — this updates the same booking, never creates a second one.\nCancel: confirm which booking, then call \"Cancel Booking\" with its id.\nAfter reschedule or cancel, call \"Get My Bookings\" again and report the fresh result.\n\nWhen listing bookings from \"Get My Bookings\", NEVER calculate or guess the day of the week yourself. Use the exact \"dayOfWeek\" field returned by the tool and translate only that word into Arabic (e.g. \"Monday\" -> \"الاثنين\"). Never recompute it from the date. Present the date and time fields exactly as returned, do not alter them.\n\n## HUMAN HANDOFF — CRITICAL\nStop trying to solve the problem yourself and call \"Notify Staff\" AND \"Trigger Human Handoff\" in these 5 cases ONLY:\n1. A complex medical question you cannot safely answer.\n2. You detect anger or frustration in the patient's tone.\n3. The request is confusing/ambiguous and stays unclear after one clarification attempt.\n4. The patient explicitly asks for a human / real employee.\n5. The patient asks you directly to analyze or diagnose a medical photo.\nWhen these tools are called, reply to the patient with a message meaning: \"You've been connected to one of our staff, they'll reach out shortly 🙏\" (in the patient's own language/dialect). Do not give medical advice, do not keep trying to resolve anger yourself, do not continue the booking flow after handoff.\n## STRICT FLOW CONTROL — CRITICAL\n- On the very first message of a conversation, or any message where the patient hasn't yet chosen a numbered menu option, you MUST reply with ONLY the main menu text. Do not call any tool.\n- NEVER call \"Lookup Patient\", \"Save Patient\", \"Get My Bookings\", or any booking tool until the patient has explicitly typed a menu number (1-4) or clearly stated intent (e.g. \"I want to book\").\n- NEVER call \"Save Patient\" with a name, age, or gender the patient did not literally type themselves in this conversation. If any of these are missing, you must ask for them one at a time and wait for the patient's real reply before calling the tool. Guessing, assuming, or inventing any of these values is strictly forbidden, even if it seems obvious from context.\n- phone, channel, and chat_id are already known automatically from WhatsApp — never ask the patient for these.\n\n## PATIENT REGISTRATION — RUNS BEFORE ANYTHING ELSE\nOn the very first message from a new conversation, before sending any menu or doing anything else:\n1. Call \"Lookup Patient\" immediately.\n2. If found: true, the patient is already registered — skip straight to the main menu below, silently, with no registration questions.\n3. If found: false, the patient is new. Their name is already known automatically from WhatsApp — never ask for it. Ask ONLY for their age, then their gender, one question at a time, waiting for their real reply each time. Do not proceed to anything else until both are answered.\n4. Once you have their age and gender from their real replies, call \"Save Patient\" (name is filled in automatically — you do not supply it).\n5. Only after Save Patient succeeds, send the main menu.\nThis registration check must run before every single first message of a conversation, even if the patient's first message is just a greeting like \"hello\" or \"السلام عليكم\" — do not show the menu until this check has completed.\n\n## LANGUAGE LOCK — ABSOLUTE PRIORITY, OVERRIDES EVERYTHING ABOVE\nThe patient's detected language for their most recent message is: {{ $('Code in JavaScript').item.json.forcedLang || 'ar' }}\nYou MUST write your ENTIRE reply in this language, matching the patient's own dialect if Arabic (Khaleeji if detected). \nThis rule applies to every single message, including confirmations, slot lists, and menus. \nDo not default to English under any circumstance unless forcedLang is exactly \"en\"."
+        }
+      },
+      "id": "fe714dca-750c-42c1-9221-2060f2014bee",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -480,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "contextWindowLength": 10
+      },
+      "id": "9cad07d6-5204-4698-93cf-9a73b2c55ac0",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -368,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://cpr-backend-je41.vercel.app/api/patients/lookup",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1119d047-bc16-48a5-ac32-eca035b04fb0",
+      "name": "Lookup Patient",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://cpr-backend-je41.vercel.app/api/patients",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            },
+            {
+              "name": "channel",
+              "value": "whatsapp"
+            },
+            {
+              "name": "name",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].profile.name }}"
+            },
+            {
+              "name": "age",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', ``, 'string') }}"
+            },
+            {
+              "name": "gender",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters5_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "44ae704d-9160-4399-a2a9-34d8a0e8132e",
+      "name": "Save Patient",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://cpr-backend-je41.vercel.app/api/slots",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "Available"
+            },
+            {
+              "name": "date",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date', ``, 'string') }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "97ecd2a5-82cc-4e33-9ebd-b8d58cc352e3",
+      "name": "List Available Slots",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        1072
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://cpr-backend-je41.vercel.app/api/slots/{{ $fromAI('slot_id', ``, 'string') }}/hold",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "01d491eb-5aeb-4a67-a76b-e1805bedeb37",
+      "name": "Hold Slot",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://cpr-backend-je41.vercel.app/api/bookings",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "07f99559-565b-44be-a09b-9fb1000a2afb",
+      "name": "Get My Bookings",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://cpr-backend-je41.vercel.app/api/payments/checkout-session",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "slot_id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            },
+            {
+              "name": "patient_phone",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            },
+            {
+              "name": "chat_id",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            },
+            {
+              "name": "channel",
+              "value": "whatsapp"
+            },
+            {
+              "name": "patient_name",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].profile.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "945adb47-031b-4790-91e3-0b8eb1506c0c",
+      "name": "Create Payment Link",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://cpr-backend-je41.vercel.app/api/appointments",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "slot_id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('slot_id', ``, 'string') }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            },
+            {
+              "name": "channel",
+              "value": "whatsapp"
+            },
+            {
+              "name": "chat_id",
+              "value": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cf08894a-ca98-4d59-981d-aba4e712146e",
+      "name": "Book Appointment (Cash)",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://cpr-backend-je41.vercel.app/api/bookings/{{ $fromAI('booking_id', ``, 'string') }}/reschedule",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "new_slot_id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('new_slot_id', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4b216660-ddd4-4201-8d18-28ed8eb106bd",
+      "name": "Reschedule Booking",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://cpr-backend-je41.vercel.app/api/bookings/{{ $fromAI('booking_id', ``, 'string') }}/cancel",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f1058124-b59a-4c94-944d-6bd5e60294b2",
+      "name": "Cancel Booking",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v20.0/1149971721541806/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAPZAcVljOHQBSCceZBvmPapeVBkZA9nRgwOtYQolTTcQ6t88p1cJkZB3wlZAwRqnh5vR9NFVLg4avhjoUfGHVrs5yfbM7DujhgZBsNCGo2LMHt3TV7e1Ioim2G3M6yv3JUcfSZBG1JSZAs81UfdPKw2bt5vmQgFyMFZCz4t5GaPnvsRoif4av68inuwgcZA3BEAlBZBYmepAFEnZAAfCHOxEgkxecaV9SvNkyS3umZCdrLgiJni4ZAoZAhrPSEZAh88BSeW6e8M96qaGZAeLDEIrwjAPDZCYw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "whatsapp"
+            },
+            {
+              "name": "to",
+              "value": "21624613009"
+            },
+            {
+              "name": "type",
+              "value": "text"
+            },
+            {
+              "name": "text[body]",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('handoff_reason', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c2fcbb47-ede7-4fe2-9108-ea754f40842e",
+      "name": "Notify Staff",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://cpr-backend-je41.vercel.app/api/conversations/{{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "a1f3c9e7b2d84f6e1c0a9b3d7e5f2c1a8b4d6e9f0c3a7b1d5e8f2c4a9b6d3e7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "state",
+              "value": "paused_human"
+            },
+            {
+              "name": "pendingData",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('handoff_reason', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ff3e90c3-9418-42d4-915a-78683c5cc477",
+      "name": "Trigger Human Handoff",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        864,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').first().json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').first().json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "6141d6d8-096a-4d7e-bbc3-404ea7ef638d",
+      "name": "Send message",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        736
+      ],
+      "webhookId": "74b7dce3-2580-4e23-923d-98c8f99b0734",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "qUdSJt3E7sLVd7ci",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.text || \"\";\nconst isArabic = /[\\u0600-\\u06FF]/.test(text);\nreturn [{\n  json: {\n    ...$json,\n    forcedLang: isArabic ? \"ar\" : \"en\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        832
+      ],
+      "id": "c70ae528-2156-4df6-bf52-9e78dbed9e5d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        384
+      ],
+      "id": "d76a7d3a-bcae-4bdd-912f-3f39b8c3cdf0",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bWTduml7M8mB0j6w",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        944
+      ],
+      "id": "54eb8a04-1569-4791-87b0-d3207ec3fc06",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "FOIvUjERz3rECyKh",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Message ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message ID": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Message": {
+      "main": [
+        [
+          {
+            "node": "Is Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Duplicate - Ignore",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Type": {
+      "main": [
+        [
+          {
+            "node": "Normalize Text Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Audio Media URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Image Media URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ignore (unsupported type)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio Media URL": {
+      "main": [
+        [
+          {
+            "node": "Download Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe Audio (Groq Whisper)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe Audio (Groq Whisper)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Audio Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Audio Input": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Text Input": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image Media URL": {
+      "main": [
+        [
+          {
+            "node": "Mark Awaiting Case Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Awaiting Case Description": {
+      "main": [
+        [
+          {
+            "node": "Ask For Case Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Conversation State": {
+      "main": [
+        [
+          {
+            "node": "Conversation State Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation State Router": {
+      "main": [
+        [
+          {
+            "node": "Parse Pending Case",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stay Silent (human is handling)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Pending Case": {
+      "main": [
+        [
+          {
+            "node": "Forward Image To Doctor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forward Image To Doctor": {
+      "main": [
+        [
+          {
+            "node": "Forward Description To Doctor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forward Description To Doctor": {
+      "main": [
+        [
+          {
+            "node": "Log Case (backend record)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Case (backend record)": {
+      "main": [
+        [
+          {
+            "node": "Reset Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Conversation State": {
+      "main": [
+        [
+          {
+            "node": "Confirm Case Sent To Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Patient": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Patient": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Available Slots": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hold Slot": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get My Bookings": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Payment Link": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Appointment (Cash)": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reschedule Booking": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Booking": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Staff": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Human Handoff": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "142f925a-3738-49c9-b1dd-2ab86b3dd2b6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f1a6aefd5e34e9421a92d87e4f75dba8a331dc0182fe8dd61d3a962dbff5e27f"
+  },
+  "nodeGroups": [],
+  "id": "g7fE1zLGnrfiwo0D",
+  "tags": []
+}
