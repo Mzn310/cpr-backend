@@ -110,6 +110,18 @@ router.post("/checkout-session", async (req, res) => {
       );
     }
 
+    const charge = await tapRes.json();
+    console.log(
+      "TAP CHARGE RESPONSE:",
+      tapRes.status,
+      JSON.stringify(charge, null, 2),
+    ); // TEMP — remove later
+    if (!tapRes.ok || !charge.transaction?.url) {
+      throw new Error(
+        charge.errors?.[0]?.description || "tap_charge_creation_failed",
+      );
+    }
+
     res.json({
       url: charge.transaction.url,
       expires_in_minutes: 60,
