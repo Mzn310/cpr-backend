@@ -11,7 +11,7 @@ const DEPOSIT_AMOUNT = Number(process.env.DEPOSIT_AMOUNT || 50);
 
 // POST /api/payments/checkout-session
 router.post("/checkout-session", async (req, res) => {
-  const { slot_id, patient_phone, chat_id, channel } = req.body;
+  const { slot_id, patient_phone, patient_name, chat_id, channel } = req.body;
   if (!slot_id || !chat_id)
     return res.status(400).json({ error: "slot_id_and_chat_id_required" });
 
@@ -21,6 +21,10 @@ router.post("/checkout-session", async (req, res) => {
     { new: true },
   );
   if (!slot) return res.status(409).json({ error: "slot_not_available" });
+
+  const nameParts = (patient_name || "Patient").trim().split(/\s+/);
+  const first_name = nameParts[0];
+  const last_name = nameParts.slice(1).join(" ") || first_name;
 
   try {
     const tapRes = await fetch(`${TAP_API_BASE}/charges`, {
@@ -35,7 +39,11 @@ router.post("/checkout-session", async (req, res) => {
         threeDSecure: true,
         save_card: false,
         description: `Appointment deposit - ${slot.date} ${slot.time}`,
-        customer: { phone: { number: patient_phone || "" } },
+        customer: {
+          first_name,
+          last_name,
+          phone: { number: patient_phone || "" },
+        },
         source: { id: "src_all" },
         redirect: {
           url:
