@@ -4,8 +4,6 @@ import Slot from "../models/Slot.js";
 const router = Router();
 const STALE_MINUTES = 65;
 
-// Working hours: 9:00 AM through 8:00 PM, 30-minute slots.
-// Stored in 24-hour "HH:MM" so they sort correctly and validate simply.
 const WORKING_HOURS_START = "09:00";
 const WORKING_HOURS_END = "20:00";
 
@@ -71,12 +69,10 @@ router.post("/", async (req, res) => {
   if (!date || !time || !doctor)
     return res.status(400).json({ error: "missing_fields" });
   if (!isWithinWorkingHours(time)) {
-    return res
-      .status(400)
-      .json({
-        error: "outside_working_hours",
-        allowed: `${WORKING_HOURS_START}-${WORKING_HOURS_END}`,
-      });
+    return res.status(400).json({
+      error: "outside_working_hours",
+      allowed: `${WORKING_HOURS_START}-${WORKING_HOURS_END}`,
+    });
   }
   try {
     const slot = await Slot.create({ date, time, doctor });
@@ -87,7 +83,6 @@ router.post("/", async (req, res) => {
 });
 
 // POST /api/slots/generate  { doctor, days }
-// Bulk-creates every 30-min slot within working hours for the next N days.
 router.post("/generate", async (req, res) => {
   const { doctor, days } = req.body;
   if (!doctor) return res.status(400).json({ error: "doctor_required" });
@@ -104,7 +99,7 @@ router.post("/generate", async (req, res) => {
         await Slot.create({ date: dateStr, time, doctor });
         createdCount++;
       } catch (e) {
-        skippedCount++; // already exists
+        skippedCount++;
       }
     }
   }

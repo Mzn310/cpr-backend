@@ -6,10 +6,6 @@ import { createBooking } from "./bookings.js";
 const router = Router();
 
 // POST /api/webhooks/tap
-// Point this at Tap's dashboard/charge "post.url" (see routes/payments.js).
-// Verification formula is copied exactly from Tap's own docs
-// (developers.tap.company/docs/webhook) - do NOT reorder these fields, the
-// hash will silently fail to match if the concatenation order changes.
 function verifyTapHashstring(body, secretKey) {
   const toBeHashed =
     "x_id" +
@@ -50,7 +46,7 @@ router.post("/tap", async (req, res) => {
   if (existing) return res.json({ ok: true, duplicate: true });
 
   await Payment.create({
-    stripeSessionId: body.id, // reused field name - holds the Tap charge id
+    stripeSessionId: body.id,
     chatId: body.metadata?.chat_id,
     amountTotal: body.amount,
     currency: body.currency,

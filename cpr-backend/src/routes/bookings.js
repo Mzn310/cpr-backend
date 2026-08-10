@@ -8,8 +8,6 @@ import { upsertPatient } from "./patients.js";
 const router = Router();
 
 // Creates a confirmed booking and marks the slot Booked inside a
-// MongoDB transaction (requires a replica set - Atlas provides this
-// by default, even on the free tier).
 export async function createBooking({
   phone,
   channel,
@@ -88,9 +86,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT /api/bookings/:id/reschedule   { new_slot_id }
-// Called by the n8n "Reschedule Booking" tool. Atomically releases the old
-// slot, holds the new one, and updates the existing booking in place -
-// never creates a second booking.
+
 router.put("/:id/reschedule", async (req, res) => {
   const { new_slot_id } = req.body;
   if (!new_slot_id) {

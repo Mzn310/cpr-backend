@@ -7,20 +7,12 @@ const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY; // sk_live_xxx / sk_test_xxx 
 const TAP_API_BASE = "https://api.tap.company/v2";
 
 // Tap operates across Saudi, Qatar, Kuwait, Bahrain, UAE, Oman with one
-// integration - set the merchant's default currency here (SAR for Saudi,
-// QAR for Qatar, etc). Tap will still surface locally relevant methods
-// (mada, KNET, Benefit...) based on the customer's card/device even if the
-// charge currency itself is fixed.
+
 const DEPOSIT_CURRENCY = process.env.DEPOSIT_CURRENCY || "SAR";
 // Tap's API always expects amount as a plain decimal number (e.g. 50 or
-// 50.5), not smallest-unit integers like Stripe used.
 const DEPOSIT_AMOUNT = Number(process.env.DEPOSIT_AMOUNT || 50);
 
 // POST /api/payments/checkout-session
-// Body: { slot_id, patient_phone, chat_id, channel }
-// Called by the n8n "Create Payment Link" tool. Holds the slot for 65
-// minutes (matches the auto-release window in slots.js) so it can't be
-// double-booked while the patient is paying.
 router.post("/checkout-session", async (req, res) => {
   const { slot_id, patient_phone, chat_id, channel } = req.body;
   if (!slot_id || !chat_id)

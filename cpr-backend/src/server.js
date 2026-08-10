@@ -16,8 +16,6 @@ import casesRouter from "./routes/cases.js";
 const app = express();
 
 // Tap's webhook verification is computed over specific JSON fields (see
-// routes/webhooks.js), not the raw request body, so - unlike Stripe -
-// express.json() can be applied globally before this route.
 app.use(cors());
 app.use(express.json());
 
