@@ -5,23 +5,37 @@ import { createBooking } from "./bookings.js";
 
 const router = Router();
 
+// Currencies that use 3 decimal places instead of 2 (per Tap docs / ISO 4217).
+const THREE_DECIMAL_CURRENCIES = new Set(["BHD", "KWD", "OMR", "JOD"]);
+
+function formatAmount(amount, currency) {
+  const decimals = THREE_DECIMAL_CURRENCIES.has(currency) ? 3 : 2;
+  return Number(amount).toFixed(decimals);
+}
+
 // POST /api/webhooks/tap
 function verifyTapHashstring(body, secretKey) {
+  const amount = formatAmount(body.amount, body.currency);
+  const gatewayRef = body.reference?.gateway ?? "";
+  const paymentRef = body.reference?.payment ?? "";
+  const created = body.transaction?.created ?? "";
+
   const toBeHashed =
     "x_id" +
     body.id +
     "x_amount" +
-    body.amount +
+    amount +
     "x_currency" +
     body.currency +
     "x_gateway_reference" +
-    body.reference?.gateway +
+    gatewayRef +
     "x_payment_reference" +
-    body.reference?.payment +
+    paymentRef +
     "x_status" +
     body.status +
     "x_created" +
-    body.transaction?.created;
+    created;
+
   return crypto
     .createHmac("sha256", secretKey)
     .update(toBeHashed)
@@ -34,6 +48,10 @@ router.post("/tap", async (req, res) => {
   const expectedHash = verifyTapHashstring(body, process.env.TAP_SECRET_KEY);
 
   if (!postedHash || postedHash !== expectedHash) {
+    console.error("Tap webhook hashstring mismatch", {
+      id: body?.id,
+      status: body?.status,
+    });
     return res.status(401).json({ error: "invalid_hashstring" });
   }
 
