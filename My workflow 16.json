@@ -1,0 +1,342 @@
+{
+  "name": "My workflow 16",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voxa-whatsapp-incoming",
+        "responseMode": "immediately",
+        "options": {}
+      },
+      "id": "6c14104e-f796-4a1d-8497-6032b290d212",
+      "name": "Webhook - WhatsApp Incoming",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1648,
+        128
+      ],
+      "webhookId": "voxa-whatsapp-incoming"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verify HMAC-SHA256 signature from Voxa (X-Voxa-Signature header)\n// If verification fails, we stop processing (return empty to halt this branch)\nconst crypto = require('crypto');\n\nconst webhookSecret = 'whsec_krEvmzIEdH8tM2UdaCvokRnLidIw6KrGS36z7qLYk6I';\nconst receivedSignature = $input.first().json.headers['x-voxa-signature'] || '';\nconst rawBody = JSON.stringify($input.first().json.body);\n\nconst computed = crypto.createHmac('sha256', webhookSecret).update(rawBody, 'utf8').digest('hex');\n\nconst isValid = computed === receivedSignature;\n\nreturn [{\n  json: {\n    ...$input.first().json.body,\n    _signatureValid: isValid\n  }\n}];"
+      },
+      "id": "a0307bcc-f14e-4ad5-bc1b-b045700d2f1e",
+      "name": "Verify Webhook Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-signature",
+              "leftValue": "={{ $json._signatureValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "cond-inbound",
+              "leftValue": "={{ $json.direction }}",
+              "rightValue": "Inbound",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d7d7f1c0-04f6-438d-9cab-a4b62b1c8ccd",
+      "name": "Valid Signature AND Inbound?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.voxa.sa/connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "3a2144fc-acfd-ddc9-f10f-860828b03fa6_API_07ffd9c0"
+            },
+            {
+              "name": "client_secret",
+              "value": "89bec895-25c9-4123-8c2c-f4ae5df3e5ce"
+            },
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "scope",
+              "value": "VoxaAPI"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e94f903f-0c9a-4fb1-b724-88680311bf76",
+      "name": "Get Voxa Access Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -976,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.voxa.sa/v1/contacts/{{ $('Valid Signature AND Inbound?').item.json.contactId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c077e14d-f1a5-4548-94a1-a73d3fb89f2e",
+      "name": "Get Contact Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -752,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine the original message data with the fetched contact's phone number\nconst messageData = $('Valid Signature AND Inbound?').item.json;\nconst contactData = $input.first().json;\n\nconst rawPhone = contactData.phoneNumber || '';\nconst digitsOnly = String(rawPhone).replace(/[^0-9]/g, '');\nconst phone_e164 = digitsOnly ? '+' + digitsOnly : '';\n\nreturn [{\n  json: {\n    conversation_id: messageData.conversationId,\n    customer_phone_e164: phone_e164,\n    contact_name: contactData.name || '',\n    message_body: messageData.body || '',\n    message_type: messageData.messageType || '',\n    channel_source: 'whatsapp',\n    started_at: new Date().toISOString(),\n    status: 'active'\n  }\n}];"
+      },
+      "id": "bf952160-2aad-46c7-bc34-cba5b3407bca",
+      "name": "Merge Message + Contact Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1baBCmsIc-oWciyXCjdDorJzDoM_9E3-unXwz4R_OdCc",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Conversations",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "conversation_id": "={{ $json.conversation_id }}",
+            "customer_id": "",
+            "channel_source": "={{ $json.channel_source }}",
+            "started_at": "={{ $json.started_at }}",
+            "status": "={{ $json.status }}",
+            "assigned_staff_id": "",
+            "closed_at": ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "channel_source",
+              "displayName": "channel_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_staff_id",
+              "displayName": "assigned_staff_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "closed_at",
+              "displayName": "closed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3ce7fc21-3aba-4265-b4af-cdda535c4911",
+      "name": "Log to Conversations Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -304,
+        16
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cnTlb1HO7mE1rCnw",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - WhatsApp Incoming": {
+      "main": [
+        [
+          {
+            "node": "Verify Webhook Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Webhook Signature": {
+      "main": [
+        [
+          {
+            "node": "Valid Signature AND Inbound?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Signature AND Inbound?": {
+      "main": [
+        [
+          {
+            "node": "Get Voxa Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Voxa Access Token": {
+      "main": [
+        [
+          {
+            "node": "Get Contact Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact Details": {
+      "main": [
+        [
+          {
+            "node": "Merge Message + Contact Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Message + Contact Data": {
+      "main": [
+        [
+          {
+            "node": "Log to Conversations Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bf6981e0-9f8f-4dcb-b551-bc181b26a507",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f1a6aefd5e34e9421a92d87e4f75dba8a331dc0182fe8dd61d3a962dbff5e27f"
+  },
+  "nodeGroups": [],
+  "id": "rysSS8BKzZX4kxVt",
+  "tags": []
+}

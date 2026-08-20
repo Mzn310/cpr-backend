@@ -1,5 +1,4 @@
 {
-  "name": "My workflow 8",
   "nodes": [
     {
       "parameters": {
@@ -216,7 +215,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAglzGeQMt8BSGDQBX58fWdpL6ZCPL1bfMdLLC0c44qSWOc9zIhV3TN1EkquthZA8enmwKqviIGIBXayL4pSZBSRuIOwPlAkkG4zDQ9n9yX6Vp3mJArqsCdI42ppghMwWMZArMHjn41ZABnQsi9ryZCUGuNJerfxTXsAXZAlZBkhpakyNLGgbtlBmAduF2xpjh97XqQm1ZCkJhE000zKaGijr6REj9VNMx5if6nam3Y8Dt80vqghl8OdPu4TLPaJWXA3SYQzxU7d76vCcMfvJv1JU8wZDZD"
+              "value": "Bearer EAAPZAcVljOHQBSBR0bQCmQ7sqZAG0Wm9kY5xDnaNS7vvq1xwZCEkz9loHwsKaNc2JFCI1gyEbPNyk0TzF6aToCcyiqeZCFZAyj3FETnd6iZBsu5a1dUmU2cBhDo9eGMrwaGmphD8khVZAFrCelyA6ZCi2ZBmxjiP0iuAxWZCMKRZBi96GhKZBkxa8MZBtU0wdKr0G4Cl7h56LIZAi3IBrlyYZCa7hfFOIZAZB7mZAn5oo0jF2VcqHjbAJl7dPfZBUZB9GX4bgXRM57IMtVQwEH6EiMrTNieFy19l"
             }
           ]
         },
@@ -239,7 +238,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAglzGeQMt8BSGDQBX58fWdpL6ZCPL1bfMdLLC0c44qSWOc9zIhV3TN1EkquthZA8enmwKqviIGIBXayL4pSZBSRuIOwPlAkkG4zDQ9n9yX6Vp3mJArqsCdI42ppghMwWMZArMHjn41ZABnQsi9ryZCUGuNJerfxTXsAXZAlZBkhpakyNLGgbtlBmAduF2xpjh97XqQm1ZCkJhE000zKaGijr6REj9VNMx5if6nam3Y8Dt80vqghl8OdPu4TLPaJWXA3SYQzxU7d76vCcMfvJv1JU8wZDZD"
+              "value": "Bearer EAAPZAcVljOHQBSBR0bQCmQ7sqZAG0Wm9kY5xDnaNS7vvq1xwZCEkz9loHwsKaNc2JFCI1gyEbPNyk0TzF6aToCcyiqeZCFZAyj3FETnd6iZBsu5a1dUmU2cBhDo9eGMrwaGmphD8khVZAFrCelyA6ZCi2ZBmxjiP0iuAxWZCMKRZBi96GhKZBkxa8MZBtU0wdKr0G4Cl7h56LIZAi3IBrlyYZCa7hfFOIZAZB7mZAn5oo0jF2VcqHjbAJl7dPfZBUZB9GX4bgXRM57IMtVQwEH6EiMrTNieFy19l"
             }
           ]
         },
@@ -337,7 +336,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAPZAcVljOHQBSCceZBvmPapeVBkZA9nRgwOtYQolTTcQ6t88p1cJkZB3wlZAwRqnh5vR9NFVLg4avhjoUfGHVrs5yfbM7DujhgZBsNCGo2LMHt3TV7e1Ioim2G3M6yv3JUcfSZBG1JSZAs81UfdPKw2bt5vmQgFyMFZCz4t5GaPnvsRoif4av68inuwgcZA3BEAlBZBYmepAFEnZAAfCHOxEgkxecaV9SvNkyS3umZCdrLgiJni4ZAoZAhrPSEZAh88BSeW6e8M96qaGZAeLDEIrwjAPDZCYw"
+              "value": "Bearer EAAPZAcVljOHQBSBR0bQCmQ7sqZAG0Wm9kY5xDnaNS7vvq1xwZCEkz9loHwsKaNc2JFCI1gyEbPNyk0TzF6aToCcyiqeZCFZAyj3FETnd6iZBsu5a1dUmU2cBhDo9eGMrwaGmphD8khVZAFrCelyA6ZCi2ZBmxjiP0iuAxWZCMKRZBi96GhKZBkxa8MZBtU0wdKr0G4Cl7h56LIZAi3IBrlyYZCa7hfFOIZAZB7mZAn5oo0jF2VcqHjbAJl7dPfZBUZB9GX4bgXRM57IMtVQwEH6EiMrTNieFy19l"
             }
           ]
         },
@@ -530,13 +529,13 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAPZAcVljOHQBSCceZBvmPapeVBkZA9nRgwOtYQolTTcQ6t88p1cJkZB3wlZAwRqnh5vR9NFVLg4avhjoUfGHVrs5yfbM7DujhgZBsNCGo2LMHt3TV7e1Ioim2G3M6yv3JUcfSZBG1JSZAs81UfdPKw2bt5vmQgFyMFZCz4t5GaPnvsRoif4av68inuwgcZA3BEAlBZBYmepAFEnZAAfCHOxEgkxecaV9SvNkyS3umZCdrLgiJni4ZAoZAhrPSEZAh88BSeW6e8M96qaGZAeLDEIrwjAPDZCYw"
+              "value": "Bearer EAAPZAcVljOHQBSBR0bQCmQ7sqZAG0Wm9kY5xDnaNS7vvq1xwZCEkz9loHwsKaNc2JFCI1gyEbPNyk0TzF6aToCcyiqeZCFZAyj3FETnd6iZBsu5a1dUmU2cBhDo9eGMrwaGmphD8khVZAFrCelyA6ZCi2ZBmxjiP0iuAxWZCMKRZBi96GhKZBkxa8MZBtU0wdKr0G4Cl7h56LIZAi3IBrlyYZCa7hfFOIZAZB7mZAn5oo0jF2VcqHjbAJl7dPfZBUZB9GX4bgXRM57IMtVQwEH6EiMrTNieFy19l"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: \"15551826689\", type: \"image\", image: { id: $json.media_id } }) }}",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: \"whatsapp\", to: \"21624613009\", type: \"image\", image: { id: $json.media_id } }) }}",
         "options": {}
       },
       "id": "31ee9e15-fb25-4278-8480-1608ad5139e9",
@@ -552,7 +551,7 @@
       "parameters": {
         "operation": "send",
         "phoneNumberId": "={{ $('WhatsApp Trigger').first().json.metadata.phone_number_id }}",
-        "recipientPhoneNumber": "15551826689",
+        "recipientPhoneNumber": "21624613009",
         "textBody": "=وصف الحالة من المريض ({{ $('Parse Pending Case').item.json.name }} - {{ $('Parse Pending Case').item.json.wa_id }}):\n{{ $('Parse Pending Case').item.json.description }}",
         "additionalFields": {}
       },
@@ -1046,7 +1045,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAPZAcVljOHQBSCceZBvmPapeVBkZA9nRgwOtYQolTTcQ6t88p1cJkZB3wlZAwRqnh5vR9NFVLg4avhjoUfGHVrs5yfbM7DujhgZBsNCGo2LMHt3TV7e1Ioim2G3M6yv3JUcfSZBG1JSZAs81UfdPKw2bt5vmQgFyMFZCz4t5GaPnvsRoif4av68inuwgcZA3BEAlBZBYmepAFEnZAAfCHOxEgkxecaV9SvNkyS3umZCdrLgiJni4ZAoZAhrPSEZAh88BSeW6e8M96qaGZAeLDEIrwjAPDZCYw"
+              "value": "Bearer EAAPZAcVljOHQBSJBC6LPXPgNgRq67h0GHeKFeJPtFZB0AQCyAA9DQfx5peyKYoMWevZCZCSr0WYZBNNvciNStM8NaovbZCmRA6aDX0pbOExPYFEMEZBWcWRrl94yxJwF9daqJa8qUUsOwGlZBYajj6mcgN5M4AGlJaa5zW3GTOp0aVsW4iGaHplieXOZAkRpzcgvNMnkD8ELBxvVmS6hDAVAZCDtuVMpdImKjvJY6xPZCzG3G7N0yBapcIytwulK43nfrg7AxswWKLlZBZBKVEm1pC85c"
             }
           ]
         },
@@ -1067,7 +1066,7 @@
             },
             {
               "name": "text[body]",
-              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('handoff_reason', ``, 'string') }}"
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', ``, 'string') }}"
             }
           ]
         },
@@ -1164,8 +1163,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -416,
-        384
+        -528,
+        928
       ],
       "id": "d76a7d3a-bcae-4bdd-912f-3f39b8c3cdf0",
       "name": "Google Gemini Chat Model",
@@ -1175,29 +1174,8 @@
           "name": "Google Gemini(PaLM) Api account"
         }
       }
-    },
-    {
-      "parameters": {
-        "model": "llama-3.3-70b-versatile",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
-      "typeVersion": 1,
-      "position": [
-        -544,
-        944
-      ],
-      "id": "54eb8a04-1569-4791-87b0-d3207ec3fc06",
-      "name": "Groq Chat Model",
-      "credentials": {
-        "groqApi": {
-          "id": "FOIvUjERz3rECyKh",
-          "name": "Groq account"
-        }
-      }
     }
   ],
-  "pinData": {},
   "connections": {
     "WhatsApp Trigger": {
       "main": [
@@ -1604,7 +1582,7 @@
         ]
       ]
     },
-    "Groq Chat Model": {
+    "Google Gemini Chat Model": {
       "ai_languageModel": [
         [
           {
@@ -1614,25 +1592,11 @@
           }
         ]
       ]
-    },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        []
-      ]
     }
   },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
-  },
-  "versionId": "142f925a-3738-49c9-b1dd-2ab86b3dd2b6",
+  "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "f1a6aefd5e34e9421a92d87e4f75dba8a331dc0182fe8dd61d3a962dbff5e27f"
-  },
-  "nodeGroups": [],
-  "id": "g7fE1zLGnrfiwo0D",
-  "tags": []
+  }
 }
