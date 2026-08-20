@@ -60,18 +60,22 @@ router.get("/", async (req, res) => {
     status: b.status,
     paymentRef: b.paymentRef,
     confirmedAt: b.confirmedAt,
-    phone: b.patientId?.phone,
-    channel: b.patientId?.channel,
-    chatId: b.patientId?.chatId,
+
+    // Patient information
+    patientName: b.patientId?.name || "—",
+    phone: b.patientId?.phone || "—",
+
     date: b.slotId?.date,
     time: b.slotId?.time,
+
     dayOfWeek: b.slotId?.date
       ? new Date(b.slotId.date + "T00:00:00Z").toLocaleDateString("en-US", {
           weekday: "long",
           timeZone: "UTC",
         })
       : null,
-    doctor: b.slotId?.doctor,
+
+    doctor: b.slotId?.doctor || "—",
   }));
   res.json(shaped);
 });
