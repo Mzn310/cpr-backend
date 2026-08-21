@@ -159,4 +159,20 @@ router.put("/:id/cancel", async (req, res) => {
   res.json({ ok: true, booking });
 });
 
+router.put("/delay/id", async (req, res) => {
+  const { DelayedDate, message } = req.body;
+  const booking = await Booking.findById(req.params.id);
+  const slot = await Slot.findByIdAndUpdate(booking.slotId, {
+    date: DelayedDate,
+  });
+
+  const patientId = booking.patientId;
+  const patient_phone = await Patient.findById(patientId).phone;
+
+  res.json({
+    ok: true,
+    message: "Slot delayed successfully",
+  });
+});
+
 export default router;
