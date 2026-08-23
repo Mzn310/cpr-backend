@@ -7,6 +7,27 @@ import { upsertPatient } from "./patients.js";
 
 const router = Router();
 
+const buildDelayMessage = ({ patientName, newDate, time, doctor, hasPaid }) => {
+  const greeting = patientName ? `Hello ${patientName},` : "Hello,";
+
+  let msg =
+    `${greeting}\n\n` +
+    `نأسف لإبلاغك بأن موعدك` +
+    `${doctor ? ` مع الدكتور ${doctor}` : ""} قد تم تأجيله بسبب غياب الطبيب. ` +
+    `موعدك الجديد هو ${newDate}` +
+    `${time ? ` الساعة ${time}` : ""}. نعتذر عن هذا الإزعاج.`;
+
+  if (hasPaid) {
+    msg +=
+      `\n\nإذا كنت لا ترغب في الموعد الجديد، يمكنك التواصل مع فريق الدعم لدينا ` +
+      `لترتيب استرداد المبلغ، بما أن دفعتك قد تم استلامها بالفعل.`;
+  }
+
+  msg += `\n\nشكرًا لتفهمك.`;
+
+  return msg;
+};
+
 // Creates a confirmed booking and marks the slot Booked inside a
 export async function createBooking({
   phone,
@@ -159,20 +180,59 @@ router.put("/:id/cancel", async (req, res) => {
   res.json({ ok: true, booking });
 });
 
-router.put("/delay/id", async (req, res) => {
-  const { DelayedDate, message } = req.body;
-  const booking = await Booking.findById(req.params.id);
-  const slot = await Slot.findByIdAndUpdate(booking.slotId, {
-    date: DelayedDate,
-  });
+router.put("/delay/:id", async (req, res) => {
+  try {
+    const { DelayedDate, message } = req.body;
 
-  const patientId = booking.patientId;
-  const patient_phone = await Patient.findById(patientId).phone;
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ ok: false, message: "Booking not found" });
+    }
 
-  res.json({
-    ok: true,
-    message: "Slot delayed successfully",
-  });
+    const slot = await Slot.findByIdAndUpdate(
+      booking.slotId,
+      { date: DelayedDate },
+      { new: true }, // return the updated slot so we can use it below
+    );
+
+    const patient = await Patient.findById(booking.patientId);
+    const patient_phone = patient?.phone;
+
+    const hasPaid = Boolean(booking.paymentRef); // null => never paid, value => paid
+
+    const finalMessage =
+      message ||
+      buildDelayMessage({
+        patientName: patient?.name,
+        newDate: DelayedDate,
+        time: slot?.time,
+        doctor: slot?.doctor,
+        hasPaid,
+      });
+
+    let whatsappSent = false;
+    try {
+      await axios.post(N8N_WEBHOOK_URL, {
+        from: CLINIC_WHATSAPP_NUMBER,
+        to: patient_phone,
+        chatId: patient?.chatId,
+        message: finalMessage,
+      });
+      whatsappSent = true;
+    } catch (whatsappErr) {
+      console.error("n8n WhatsApp webhook failed:", whatsappErr.message);
+    }
+
+    return res.json({
+      ok: true,
+      message: whatsappSent
+        ? "Slot delayed successfully. Message sent to client on WhatsApp."
+        : "Slot delayed successfully, but the WhatsApp message could not be sent.",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ ok: false, message: "Server error" });
+  }
 });
 
 export default router;
