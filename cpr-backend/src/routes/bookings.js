@@ -175,18 +175,19 @@ router.put("/:id/cancel", async (req, res) => {
 
 router.put("/delay/:id", async (req, res) => {
   try {
-    const { DelayedDate, message } = req.body;
+    const { DelayedDate, DelayedTime, message } = req.body;
 
     const booking = await Booking.findById(req.params.id);
     if (!booking) {
       return res.status(404).json({ ok: false, message: "Booking not found" });
     }
 
-    const slot = await Slot.findByIdAndUpdate(
-      booking.slotId,
-      { date: DelayedDate },
-      { new: true },
-    );
+    const slotUpdate = { date: DelayedDate };
+    if (DelayedTime) slotUpdate.time = DelayedTime;
+
+    const slot = await Slot.findByIdAndUpdate(booking.slotId, slotUpdate, {
+      new: true,
+    });
 
     const patient = await Patient.findById(booking.patientId);
     const patient_phone = patient?.phone;
@@ -198,7 +199,7 @@ router.put("/delay/:id", async (req, res) => {
       buildDelayMessage({
         patientName: patient?.name,
         newDate: DelayedDate,
-        time: slot?.time,
+        time: slot?.time, // now reflects the new time
         doctor: slot?.doctor,
         hasPaid,
       });
