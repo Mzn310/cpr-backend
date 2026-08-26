@@ -4,7 +4,10 @@ import Slot from "../models/Slot.js";
 import Booking from "../models/Booking.js";
 import Patient from "../models/Patient.js";
 import { upsertPatient } from "./patients.js";
+import axios from "axios";
 
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
+const CLINIC_WHATSAPP_NUMBER = process.env.CLINIC_WHATSAPP_NUMBER;
 const router = Router();
 
 const buildDelayMessage = ({ patientName, newDate, time, doctor, hasPaid }) => {
@@ -28,7 +31,6 @@ const buildDelayMessage = ({ patientName, newDate, time, doctor, hasPaid }) => {
   return msg;
 };
 
-// Creates a confirmed booking and marks the slot Booked inside a
 export async function createBooking({
   phone,
   channel,
@@ -58,8 +60,6 @@ export async function createBooking({
   }
 }
 
-// GET /api/bookings              -> admin panel: all bookings
-// GET /api/bookings?chat_id=...  -> n8n "Get My Bookings" tool: only this patient's bookings
 router.get("/", async (req, res) => {
   const { chat_id } = req.query;
 
@@ -82,7 +82,6 @@ router.get("/", async (req, res) => {
     paymentRef: b.paymentRef,
     confirmedAt: b.confirmedAt,
 
-    // Patient information
     patientName: b.patientId?.name || "—",
     phone: b.patientId?.phone || "—",
 
@@ -109,8 +108,6 @@ router.post("/", async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
-
-// PUT /api/bookings/:id/reschedule   { new_slot_id }
 
 router.put("/:id/reschedule", async (req, res) => {
   const { new_slot_id } = req.body;
@@ -139,7 +136,6 @@ router.put("/:id/reschedule", async (req, res) => {
       booking.slotId = newSlot._id;
       await booking.save({ session });
 
-      // Release the old slot back to Available now that the move succeeded.
       await Slot.findByIdAndUpdate(
         oldSlotId,
         { $set: { status: "Available", heldAt: null } },
@@ -160,9 +156,6 @@ router.put("/:id/reschedule", async (req, res) => {
   }
 });
 
-// PUT /api/bookings/:id/cancel
-// Called by the n8n "Cancel Booking" tool. Marks the booking Cancelled and
-// frees the slot back to Available.
 router.put("/:id/cancel", async (req, res) => {
   const booking = await Booking.findById(req.params.id);
   if (!booking) return res.status(404).json({ error: "booking_not_found" });
@@ -192,13 +185,13 @@ router.put("/delay/:id", async (req, res) => {
     const slot = await Slot.findByIdAndUpdate(
       booking.slotId,
       { date: DelayedDate },
-      { new: true }, // return the updated slot so we can use it below
+      { new: true },
     );
 
     const patient = await Patient.findById(booking.patientId);
     const patient_phone = patient?.phone;
 
-    const hasPaid = Boolean(booking.paymentRef); // null => never paid, value => paid
+    const hasPaid = Boolean(booking.paymentRef);
 
     const finalMessage =
       message ||

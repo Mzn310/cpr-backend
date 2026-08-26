@@ -93,7 +93,11 @@ router.post("/generate", async (req, res) => {
   for (let d = 0; d < numDays; d++) {
     const date = new Date();
     date.setDate(date.getDate() + d);
-    const dateStr = date.toISOString().slice(0, 10);
+    const dateStr = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("-");
     for (const time of times) {
       try {
         await Slot.create({ date: dateStr, time, doctor });
