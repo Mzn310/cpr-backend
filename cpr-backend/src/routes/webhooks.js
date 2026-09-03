@@ -1,9 +1,14 @@
 import { Router } from "express";
 import crypto from "crypto";
+import axios from "axios";
 import Payment from "../models/Payment.js";
+import Slot from "../models/Slot.js";
 import { createBooking } from "./bookings.js";
 
 const router = Router();
+
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
+const CLINIC_WHATSAPP_NUMBER = process.env.CLINIC_WHATSAPP_NUMBER;
 
 // Currencies that use 3 decimal places instead of 2 (per Tap docs / ISO 4217).
 const THREE_DECIMAL_CURRENCIES = new Set(["BHD", "KWD", "OMR", "JOD"]);
@@ -13,7 +18,6 @@ function formatAmount(amount, currency) {
   return Number(amount).toFixed(decimals);
 }
 
-// POST /api/webhooks/tap
 function verifyTapHashstring(body, secretKey) {
   const amount = formatAmount(body.amount, body.currency);
   const gatewayRef = body.reference?.gateway ?? "";
@@ -40,6 +44,16 @@ function verifyTapHashstring(body, secretKey) {
     .createHmac("sha256", secretKey)
     .update(toBeHashed)
     .digest("hex");
+}
+
+// Message simple en arabe confirmant le paiement
+function buildPaymentSuccessMessage({ date, time, doctor }) {
+  let msg = `تم الدفع بنجاح ✅\n\nتم تأكيد موعدك`;
+  if (doctor) msg += ` مع الدكتور ${doctor}`;
+  if (date) msg += `\nالتاريخ: ${date}`;
+  if (time) msg += `\nالوقت: ${time}`;
+  msg += `\n\nنشكرك على ثقتك، في انتظارك!`;
+  return msg;
 }
 
 router.post("/tap", async (req, res) => {
@@ -71,13 +85,37 @@ router.post("/tap", async (req, res) => {
   });
 
   try {
-    await createBooking({
+    const booking = await createBooking({
       phone: body.metadata?.patient_phone,
       channel: body.metadata?.channel,
       chatId: body.metadata?.chat_id,
       slotId: body.metadata?.slot_id,
       paymentRef: body.id,
     });
+
+    // --- NOTIFICATION WHATSAPP AU PATIENT ---
+    try {
+      const slot = await Slot.findById(booking.slotId);
+      const message = buildPaymentSuccessMessage({
+        date: slot?.date,
+        time: slot?.time,
+        doctor: slot?.doctor,
+      });
+
+      await axios.post(N8N_WEBHOOK_URL, {
+        from: CLINIC_WHATSAPP_NUMBER,
+        to: body.metadata?.patient_phone,
+        chatId: body.metadata?.chat_id,
+        message,
+      });
+    } catch (notifyErr) {
+      // Ne bloque jamais la réponse à Tap si l'envoi WhatsApp échoue
+      console.error(
+        "Payment success WhatsApp notification failed:",
+        notifyErr.message,
+        body.id,
+      );
+    }
   } catch (e) {
     console.error(
       "Booking creation failed after Tap payment:",
